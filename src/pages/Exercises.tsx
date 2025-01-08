@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import ExerciseModal from '../components/ExerciseModal';
 import { supabase } from '../lib/supabase';
-import { Exercise, NewExercise } from '../types/exercises';
+import { Exercise, NewExercise } from '../types/exercise';
 
 export default function Exercises() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -15,8 +15,7 @@ export default function Exercises() {
 
   const fetchExercises = async () => {
     try {
-      const {data,error} = await supabase.from('generic_exercises').select('id,name, type, equipment')
-      
+      const {data,error} = await supabase.from('generic_exercises').select('id,name, equipment')
       if (error) throw error
     
       setExercises(data);
@@ -75,7 +74,6 @@ export default function Exercises() {
             className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
           >
             <h3 className="font-semibold text-lg text-gray-800">{exercise.name}</h3>
-            <p className="text-gray-600">Type: {exercise.type}</p>
             <p className="text-gray-600">Equipment: {exercise.equipment}</p>
           </div>
         ))}

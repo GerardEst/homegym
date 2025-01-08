@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
+// import { Exercise } from '../types/exercises';
+// import { Workout } from '../types/workout';
 
 type Exercise = {
   id: number;
@@ -9,25 +11,10 @@ type Exercise = {
   breakTime: number;
 };
 
-type WorkoutModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (workout: {
-    name: string;
-    exercises: Exercise[];
-    duration: string;
-  }) => void;
-  initialData?: {
-    name: string;
-    exercises: Exercise[];
-    duration: string;
-  };
-};
 
-export default function WorkoutModal({ isOpen, onClose, onSave, initialData }: WorkoutModalProps) {
+export default function WorkoutModal({ isOpen, onClose, onSave, initialData }: any) {
   const [name, setName] = useState(initialData?.name || '');
-  const [duration, setDuration] = useState(initialData?.duration || '30');
-  const [exercises, setExercises] = useState<Exercise[]>(initialData?.exercises || []);
+  const [exercises, setExercises] = useState<Exercise[]>(initialData?.plan || []);
 
   const handleAddExercise = () => {
     setExercises([
@@ -48,7 +35,7 @@ export default function WorkoutModal({ isOpen, onClose, onSave, initialData }: W
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ name, exercises, duration: `${duration} min` });
+    onSave({ name, plan: exercises });
     onClose();
   };
 
@@ -79,18 +66,6 @@ export default function WorkoutModal({ isOpen, onClose, onSave, initialData }: W
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
-            <input
-              type="number"
-              required
-              min="1"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-            />
-          </div>
-
-          <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-gray-700">Exercises</label>
               <button
@@ -103,7 +78,7 @@ export default function WorkoutModal({ isOpen, onClose, onSave, initialData }: W
             </div>
 
             <div className="space-y-4">
-              {exercises.map((exercise, index) => (
+              {exercises.map((exercise) => (
                 <div key={exercise.id} className="flex gap-4 items-start p-4 bg-gray-50 rounded-md">
                   <div className="flex-1">
                     <input

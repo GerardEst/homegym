@@ -1,81 +1,30 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, Dumbbell, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Clock, Dumbbell, Plus } from 'lucide-react';
 import WorkoutModal from '../components/WorkoutModal';
-
-type Exercise = {
-  id: number;
-  name: string;
-  sets: number;
-  reps: number;
-  breakTime: number;
-};
-
-type Workout = {
-  id: number;
-  name: string;
-  duration: string;
-  exercises: Exercise[];
-  nextScheduled: string;
-};
-
-const initialWorkouts: Workout[] = [
-  {
-    id: 1,
-    name: 'Full Body Strength',
-    duration: '45 min',
-    exercises: [
-      { id: 1, name: 'Push-ups', sets: 3, reps: 12, breakTime: 60 },
-      { id: 2, name: 'Pull-ups', sets: 3, reps: 8, breakTime: 90 },
-      { id: 3, name: 'Squats', sets: 3, reps: 15, breakTime: 60 }
-    ],
-    nextScheduled: '2024-03-15',
-  },
-  {
-    id: 2,
-    name: 'Upper Body Focus',
-    duration: '30 min',
-    exercises: [
-      { id: 4, name: 'Bench Press', sets: 4, reps: 10, breakTime: 90 },
-      { id: 5, name: 'Rows', sets: 4, reps: 10, breakTime: 90 },
-      { id: 6, name: 'Shoulder Press', sets: 3, reps: 12, breakTime: 60 }
-    ],
-    nextScheduled: '2024-03-18',
-  }
-];
+import { supabase } from '../lib/supabase';
+//import { Exercise } from '../types/exercise';
+import { Workout } from '../types/workout';
 
 export default function Workouts() {
-  const [workouts, setWorkouts] = useState<Workout[]>(initialWorkouts);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
 
-  const handleSaveWorkout = (workoutData: {
-    name: string;
-    exercises: Exercise[];
-    duration: string;
-  }) => {
-    if (editingWorkout) {
-      // Update existing workout
-      setWorkouts(workouts.map(w =>
-        w.id === editingWorkout.id
-          ? { ...w, ...workoutData }
-          : w
-      ));
-    } else {
-      // Create new workout
-      const newWorkout: Workout = {
-        id: Date.now(),
-        ...workoutData,
-        nextScheduled: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      };
-      setWorkouts([...workouts, newWorkout]);
-    }
-    setEditingWorkout(null);
-  };
+  useEffect(()=>{
+    fetchWorkouts();
+  },[])
 
-  const handleEditWorkout = (workout: Workout) => {
-    setEditingWorkout(workout);
-    setIsModalOpen(true);
-  };
+  const fetchWorkouts = async () => {
+    try{
+      const {data:workouts, error} = await supabase.from('generic_workouts').select('id,name,plan')
+      if(error) throw error
+
+      console.log(workouts)
+      setWorkouts(workouts)
+    }catch(error){
+      console.error('Error fetching workouts:', error)
+    }
+  }
 
   return (
     <div className="p-6">
@@ -98,30 +47,24 @@ export default function Workouts() {
               <div className="space-y-2 text-gray-600">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{workout.duration}</span>
+                  <span>?</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Dumbbell className="w-4 h-4" />
-                  <span>{workout.exercises.length} exercises</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>Next: {new Date(workout.nextScheduled).toLocaleDateString()}</span>
+                  <Dumbbell className="w-4 h-4" /> 
+                  <span>exercises</span>
+                <div>
+                  {workout.plan.map((exercise:any) => {
+                    return (
+                      <>
+                      <span>{exercise.exerciseName}</span>
+                      <span>{exercise.amount ? `${exercise.amount} repetitions` : `${exercise.duration} minutes`}</span>
+                      </>
+                    )
+                  })}
+                  </div> 
                 </div>
               </div>
-            </div>
-            <div className="border-t px-4 py-3 bg-gray-50">
-              <div className="flex gap-2">
-                <button className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  Start Workout
-                </button>
-                <button
-                  onClick={() => handleEditWorkout(workout)}
-                  className="px-3 py-1.5 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
-                >
-                  Edit
-                </button>
-              </div>
+            
             </div>
           </div>
         ))}
@@ -133,7 +76,7 @@ export default function Workouts() {
           setIsModalOpen(false);
           setEditingWorkout(null);
         }}
-        onSave={handleSaveWorkout}
+        //onSave={handleSaveWorkout}
         initialData={editingWorkout || undefined}
       />
     </div>
