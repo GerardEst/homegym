@@ -1,25 +1,48 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import ExerciseModal from '../components/ExerciseModal';
-
-const initialExercises = [
-  { id: 1, name: 'Push-ups', type: 'strength', equipment: 'none' },
-  { id: 2, name: 'Pull-ups', type: 'strength', equipment: 'pull-up bar' },
-  { id: 3, name: 'Squats', type: 'strength', equipment: 'none' },
-];
+import { supabase } from '../lib/supabase';
+import { Exercise, NewExercise } from '../types/exercises';
 
 export default function Exercises() {
-  const [exercises, setExercises] = useState(initialExercises);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    fetchExercises();
+  }, []);
+
+  const fetchExercises = async () => {
+    try {
+      const {data,error} = await supabase.from('generic_exercises').select('id,name, type, equipment')
+      
+      if (error) throw error
+    
+      setExercises(data);
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+    }
+  };
+
+  const handleSaveExercise = async (exercise: NewExercise) => {
+    try {
+      const { data, error } = await supabase
+        .from('generic_exercises')
+        .insert([exercise])
+        .select()
+        .single() as { data: Exercise | null, error: Error };
+
+      if (error) throw error;
+      if (data) setExercises([...exercises, data]);
+    } catch (error) {
+      console.error('Error saving exercise:', error);
+    }
+  };
 
   const filteredExercises = exercises.filter(exercise =>
     exercise.name.toLowerCase().includes(search.toLowerCase())
   );
-
-  const handleSaveExercise = (exercise: any) => {
-    setExercises([...exercises, { ...exercise, id: exercises.length + 1 }]);
-  };
 
   return (
     <div className="p-6">
